@@ -98,3 +98,28 @@ class Review(CommentsAndReviews):
                 fields=['author', 'title'], name='unique_review'
             )
         ]
+
+
+class Comments(models.Model):
+    """Комментарии."""
+    author = models.ForeignKey(
+        User,
+        related_name='comments',
+        on_delete=models.CASCADE,
+        verbose_name='Автор'
+    )
+    review = models.ForeignKey(
+        Review,
+        related_name='comments',
+        on_delete=models.CASCADE,
+        verbose_name='Отзыв'
+    )
+    text = models.TextField('Комментарий')
+    pub_date = models.DateTimeField(
+        'Дата комментария',
+        auto_now_add=True,
+        db_index=True
+    )
+
+    def __str__(self):
+        return self.text
