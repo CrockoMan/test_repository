@@ -1,3 +1,4 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 from core.models import CommentsAndReviews, CategoryAndGenre
@@ -15,6 +16,10 @@ SCORE_CHOICES = (
     (9, '9 - Очень хорошо'),
     (10, '10 - Великолепно')
 )
+
+
+class User(AbstractUser):
+    pass
 
 
 class Category(CategoryAndGenre):
@@ -40,9 +45,9 @@ class Title(models.Model):
     description = models.TextField('Описание', blank=True)
     genre = models.ManyToManyField(
         Genre,
-        null=True,
-        blank=True,
-        through='TitleGenre',
+        # null=True,
+        # blank=True,
+        # through='TitleGenre',
         related_name='titles'
     )
     category = models.ForeignKey(
@@ -62,19 +67,19 @@ class Title(models.Model):
         return self.name
 
 
-class TitleGenre(models.Model):
-    """Служит для обеспечения связей многие-ко-многим."""
-    title = models.ForeignKey(Title, on_delete=models.CASCADE)
-    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
-
-    def __str__(self):
-        return f'{self.title} {self.genre}'
+# class TitleGenre(models.Model):
+#     """Служит для обеспечения связей многие-ко-многим."""
+#     title = models.ForeignKey(Title, on_delete=models.CASCADE)
+#     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+#
+#     def __str__(self):
+#         return f'{self.title} {self.genre}'
 
 
 class Review(CommentsAndReviews):
     """Содержит пользовательские отзывы о произведениях."""
     author = models.ForeignKey(
-        AUTH_USER_MODEL,
+        User,
         on_delete=models.CASCADE,
         related_name='reviews'
     )
