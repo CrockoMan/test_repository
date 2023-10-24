@@ -1,6 +1,9 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from django.db.models import Avg
+from rest_framework.pagination import LimitOffsetPagination
+
+from api.serializers import ReviewSerializer
 from reviews.models import Title
 
 
@@ -14,6 +17,9 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     """Отображение действий с отзывами."""
+
+    serializer_class = ReviewSerializer
+    pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
         title = get_object_or_404(Title, pk=self.kwargs['title_id'])
