@@ -98,3 +98,4 @@ class Review(CommentsAndReviews):
                 fields=['author', 'title'], name='unique_review'
             )
         ]
+
