@@ -6,6 +6,18 @@ from reviews.models import (Review, Comment, Title,
                             Category, Genre, User)
 
 
+class ReviewSerializer(serializers.ModelSerializer):
+    """Отзывы."""
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='username'
+    )
+
+    class Meta:
+        fields = '__all__'
+        model = Review
+        read_only_fields = ('author', 'title')
+
+
 class GenreSerializer(serializers.ModelSerializer):
     """Сериализатор для работы с жанрами."""
     class Meta:
