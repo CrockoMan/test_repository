@@ -6,6 +6,16 @@ from reviews.models import (Review, Comments, Title,
                             Category, Genre, User)
 
 
+# class ReviewSerializer(serializers.ModelSerializer):
+#     """Отзывы."""
+#     author = serializers.SlugRelatedField(
+#         read_only=True, slug_field='username'
+#     )
+#
+#     class Meta:
+#         fields = '__all__'
+#         model = Review
+#         read_only_fields = ('author', 'title')
 class ReviewSerializer(serializers.ModelSerializer):
     """Отзывы."""
     author = serializers.SlugRelatedField(
@@ -15,7 +25,33 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Review
-        read_only_fields = ('author', 'title')
+        read_only_fields = ('author', 'title' )
+        # validators = [
+        #     UniqueTogetherValidator(queryset=Review.objects.all(),
+        #                             fields=('author', 'title'))
+        # ]
+
+    def validate(self, value):
+        request = self.context.get('request')
+        author = request.user
+
+        if Review.objects.filter(
+                author=author,
+                title=self.context['view'].kwargs['title_id']).exists():
+            raise serializers.ValidationError('Not applied many review')
+        return value
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    """Отзывы."""
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='username'
+    )
+
+    class Meta:
+        fields = '__all__'
+        model = Comments
+        read_only_fields = ('author', 'review' )
 
 
 class GenreSerializer(serializers.ModelSerializer):

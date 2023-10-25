@@ -1,6 +1,6 @@
 from rest_framework import viewsets
 from django.db.models import Avg
-from reviews.models import Title, Category, Genre
+from reviews.models import Title, Category, Genre, Review
 from rest_framework import viewsets, filters
 from rest_framework.pagination import LimitOffsetPagination
 from django.shortcuts import get_object_or_404
@@ -10,7 +10,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .filters import FilterForTitle
 from .serializers import (CategorySerializer, GenreSerializer,
                           TitleReadSerializer, TitleWriteSerializer,
-                          ReviewSerializer)
+                          ReviewSerializer, CommentSerializer)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -57,10 +57,32 @@ class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     pagination_class = LimitOffsetPagination
 
+    def get_title(self):
+        return get_object_or_404(Title, pk=self.kwargs['title_id'])
+
     def get_queryset(self):
-        title = get_object_or_404(Title, pk=self.kwargs['title_id'])
+        title = self.get_title()
         return title.reviews.all()
 
     def perform_create(self, serializer):
-        title = get_object_or_404(Title, pk=self.kwargs['title_id'])
+        title = self.get_title()
         serializer.save(author=self.request.user, title=title)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    """Отображение действий с комментариями."""
+    serializer_class = CommentSerializer
+    pagination_class = LimitOffsetPagination
+
+    def ger_review(self):
+        return get_object_or_404(Review, pk=self.kwargs['review_id'])
+
+    def get_queryset(self):
+        # title = get_object_or_404(Title, pk=self.kwargs['title_id'])
+        review = self.ger_review()
+        return review.comments.all()
+
+    def perform_create(self, serializer):
+        # title = get_object_or_404(Title, pk=self.kwargs['title_id'])
+        review = self.ger_review()
+        serializer.save(author=self.request.user, review=review)
