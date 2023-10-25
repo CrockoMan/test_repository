@@ -116,7 +116,7 @@ class Comments(models.Model):
     )
     text = models.TextField('Комментарий')
     pub_date = models.DateTimeField(
-        'Дата комментария',
+        'Дата',
         auto_now_add=True,
         db_index=True
     )
