@@ -1,47 +1,50 @@
 from django.contrib import admin
+from django.contrib.auth import get_user_model
 
-from reviews.models import Review, Title, Category, Genre
+from reviews.models import Review, Comments, Title, Category, Genre
 
 
-@admin.register(Category)
+User = get_user_model()
+
+
+# class UserAdmin(admin.ModelAdmin):
+#     list_display = ('username', 'email', 'first_name',
+#                     'last_name', 'bio', 'role')
+#     search_fields = ('username',)
+#     list_filter = ('role',)
+
+
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = (
-        'name',
-        'slug',
-    )
-    search_fields = ('name',)
+    list_display = ('name', 'slug')
     list_filter = ('name',)
 
 
-@admin.register(Genre)
 class GenreAdmin(admin.ModelAdmin):
-    list_display = (
-        'name',
-        'slug',
-    )
-    search_fields = ('name',)
+    list_display = ('name', 'slug')
     list_filter = ('name',)
 
 
-@admin.register(Review)
+class TitleAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'year', 'description', 'category')
+    search_fields = ('name',)
+    list_filter = ('category',)
+
+
 class ReviewAdmin(admin.ModelAdmin):
-    list_display = (
-        'title',
-        'text',
-        'author',
-        'score',
-    )
-    search_fields = ('pub_date',)
+    list_display = ('id', 'text', 'author', 'score', 'pub_date', 'title')
+    search_fields = ('title', 'text')
+    list_filter = ('pub_date', 'score')
+
+
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('id', 'text', 'author', 'pub_date', 'review')
+    search_fields = ('review', 'text')
     list_filter = ('pub_date',)
 
 
-@admin.register(Title)
-class TitleAdmin(admin.ModelAdmin):
-    list_display = (
-        'name',
-        'year',
-        'category',
-        'description',
-    )
-    search_fields = ('name',)
-    list_filter = ('name',)
+# admin.site.register(User, UserAdmin)
+admin.site.register(Category, CategoryAdmin)
+admin.site.register(Genre, GenreAdmin)
+admin.site.register(Title, TitleAdmin)
+admin.site.register(Review, ReviewAdmin)
+admin.site.register(Comments, CommentAdmin)
