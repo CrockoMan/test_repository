@@ -74,15 +74,13 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     pagination_class = LimitOffsetPagination
 
-    def ger_review(self):
+    def get_review(self):
         return get_object_or_404(Review, pk=self.kwargs['review_id'])
 
     def get_queryset(self):
-        # title = get_object_or_404(Title, pk=self.kwargs['title_id'])
-        review = self.ger_review()
+        review = self.get_review()
         return review.comments.all()
 
     def perform_create(self, serializer):
-        # title = get_object_or_404(Title, pk=self.kwargs['title_id'])
-        review = self.ger_review()
+        review = self.get_review()
         serializer.save(author=self.request.user, review=review)

@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth import get_user_model
 
-from reviews.models import Review, Comments, Title, Category, Genre
+from reviews.models import Review, Comment, Title, Category, Genre
 
 
 User = get_user_model()
@@ -47,4 +47,4 @@ admin.site.register(Category, CategoryAdmin)
 admin.site.register(Genre, GenreAdmin)
 admin.site.register(Title, TitleAdmin)
 admin.site.register(Review, ReviewAdmin)
-admin.site.register(Comments, CommentAdmin)
+admin.site.register(Comment, CommentAdmin)

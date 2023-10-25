@@ -100,7 +100,7 @@ class Review(CommentsAndReviews):
         ]
 
 
-class Comments(models.Model):
+class Comment(models.Model):
     """Комментарии."""
     author = models.ForeignKey(
         User,

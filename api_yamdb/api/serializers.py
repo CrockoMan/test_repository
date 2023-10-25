@@ -3,7 +3,7 @@ from datetime import datetime as dt
 from django.db.models import Avg
 from rest_framework import serializers
 
-from reviews.models import (Review, Comments, Title,
+from reviews.models import (Review, Comment, Title,
                             Category, Genre, User)
 
 
@@ -41,7 +41,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = '__all__'
-        model = Comments
+        model = Comment
         read_only_fields = ('author', 'review' )
 
 
