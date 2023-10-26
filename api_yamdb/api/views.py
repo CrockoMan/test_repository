@@ -91,9 +91,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    """
-    Работа с профилем пользователя.
-    """
+    """Работа с профилем пользователя."""
     queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'username'
