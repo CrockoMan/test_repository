@@ -1,15 +1,16 @@
+from rest_framework import viewsets
 from django.db.models import Avg
+from reviews.models import Title, Category, Genre, Review
+from rest_framework import viewsets, filters
+from rest_framework.pagination import LimitOffsetPagination
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .filters import FilterForTitle
-from .serializers import (CategorySerializer,
-                          GenreSerializer, ReviewSerializer, CommentSerializer,
-                          TitleReadSerializer, TitleWriteSerializer)
-from reviews.models import User, Title, Category, Genre, Review
-from .permissions import (IsAdminOrReadOnly,
-                          IsAuthorOrModeratorOrAdminOrReadOnly)
+from .serializers import (CategorySerializer, GenreSerializer,
+                          TitleReadSerializer, TitleWriteSerializer,
+                          ReviewSerializer, CommentSerializer)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -77,15 +78,37 @@ class CommentViewSet(viewsets.ModelViewSet):
         IsAuthorOrModeratorOrAdminOrReadOnly,
     )
 
-    def ger_review(self):
+    def get_review(self):
         return get_object_or_404(Review, pk=self.kwargs['review_id'])
 
     def get_queryset(self):
-        review = get_object_or_404(Title, pk=self.kwargs['title_id'])
+        # title = get_object_or_404(Title, pk=self.kwargs['title_id'])
         review = self.ger_review()
         return review.comments.all()
 
     def perform_create(self, serializer):
-        review = get_object_or_404(Title, pk=self.kwargs['title_id'])
+        # title = get_object_or_404(Title, pk=self.kwargs['title_id'])
         review = self.ger_review()
         serializer.save(author=self.request.user, review=review)
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    """Работа с профилем пользователя."""
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    lookup_field = 'username'
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
+
+    @action(methods=['get', 'patch'], url_path='me', detail=False)
+    def me_path_user(self, request):
+        user = User.objects.get(username=request.user)
+        if request.method == 'GET':
+            serializer = self.get_serializer(user)
+            return Response(serializer.data)
+
+        serializer = UserSerializer(user, ata=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
