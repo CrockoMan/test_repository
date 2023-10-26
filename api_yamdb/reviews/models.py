@@ -2,8 +2,6 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from core.models import CommentsAndReviews, CategoryAndGenre
-
 SCORE_CHOICES = (
     (1, '1 - Отвратительно'),
     (2, '2 - Очень плохо'),
@@ -22,6 +20,32 @@ USER_CHOICES = (
     ('moderator', 'Модератор'),
     ('admin', 'Администратор'),
 )
+
+
+class CommentsAndReviews(models.Model):
+    """Модели Комментарии Отзывы."""
+    text = models.TextField('Текст',)
+    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
+
+    class Meta:
+        abstract = True
+        ordering = ('-pub_date',)
+
+    def __str__(self):
+        return self.text
+
+
+class CategoryAndGenre(models.Model):
+    """Модели Категория Жанр."""
+    name = models.CharField('Название', max_length=256)
+    slug = models.SlugField('Слаг', max_length=50, unique=True)
+
+    class Meta:
+        abstract = True
+        ordering = ('name',)
+
+    def __str__(self):
+        return self.name
 
 
 class User(AbstractUser):
