@@ -1,6 +1,9 @@
 from rest_framework import viewsets
 from django.db.models import Avg
-from reviews.models import Title, Category, Genre, Review
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
+from reviews.models import Title, Category, Genre, Review, User
 from rest_framework import viewsets, filters
 from rest_framework.pagination import LimitOffsetPagination
 from django.shortcuts import get_object_or_404
@@ -8,9 +11,14 @@ from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .filters import FilterForTitle
+from .permissions import (IsAdminOrReadOnly,
+                          IsAuthorOrModeratorOrAdminOrReadOnly,
+                          IsAdminOnlyPermission,
+                          IsAuthorModeratorAdminOrReadOnlyPermission)
 from .serializers import (CategorySerializer, GenreSerializer,
                           TitleReadSerializer, TitleWriteSerializer,
-                          ReviewSerializer, CommentSerializer)
+                          ReviewSerializer, CommentSerializer, UserSerializer,
+                          UserMePathSerializer)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -55,9 +63,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     """Отображение действий с отзывами."""
 
     serializer_class = ReviewSerializer
-    permission_classes = (
-        IsAuthorOrModeratorOrAdminOrReadOnly,
-    )
+    permission_classes = (IsAuthorModeratorAdminOrReadOnlyPermission, )
 
     def get_title(self):
         return get_object_or_404(Title, pk=self.kwargs['title_id'])
@@ -74,9 +80,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     """Отображение действий с комментариями."""
     serializer_class = CommentSerializer
-    permission_classes = (
-        IsAuthorOrModeratorOrAdminOrReadOnly,
-    )
+    permission_classes = (IsAuthorOrModeratorOrAdminOrReadOnly, )
 
     def get_queryset(self):
         review = get_object_or_404(
@@ -97,6 +101,7 @@ class UserViewSet(viewsets.ModelViewSet):
     lookup_field = 'username'
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
+    permission_classes = (IsAdminOnlyPermission,)
 
     @action(methods=['get', 'patch'], url_path='me', detail=False)
     def me_path_user(self, request):
@@ -105,7 +110,7 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(user)
             return Response(serializer.data)
 
-        serializer = UserSerializer(user, ata=request.data, partial=True)
+        serializer = UserMePathSerializer(user, ata=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=200)

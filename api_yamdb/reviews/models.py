@@ -1,8 +1,8 @@
+from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 from core.models import CommentsAndReviews, CategoryAndGenre
-from api_yamdb.settings import AUTH_USER_MODEL
 
 SCORE_CHOICES = (
     (1, '1 - Отвратительно'),
@@ -38,6 +38,14 @@ class User(AbstractUser):
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+
+    @property
+    def is_admin(self):
+        return self.is_staff or self.role == settings.ADMIN
+
+    @property
+    def is_moderator(self):
+        return self.role == settings.MODERATOR
 
 
 class Category(CategoryAndGenre):

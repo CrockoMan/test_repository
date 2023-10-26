@@ -41,7 +41,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = '__all__'
-        model = Comments
+        model = Comment
         read_only_fields = ('author', 'review')
 
 
@@ -120,3 +120,15 @@ class UserSerializer(serializers.ModelSerializer):
                   'bio',
                   'role')
 
+
+class UserMePathSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ('username',
+                  'email',
+                  'first_name',
+                  'last_name',
+                  'bio',
+                  'role')
+        read_only_fields = ('role',)
