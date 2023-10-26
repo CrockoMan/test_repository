@@ -1,4 +1,4 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins
 from django.db.models import Avg
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -20,9 +20,11 @@ from .serializers import (CategorySerializer, GenreSerializer,
                           ReviewSerializer, CommentSerializer, UserSerializer,
                           UserMePathSerializer)
 
+NO_PUT_METHODS = ('get', 'post', 'patch', 'delete', 'head','options', 'trace')
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Отображение действий с произведениями."""
+
     queryset = Title.objects.annotate(
         rating=Avg('reviews__score')
     )
@@ -31,6 +33,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter, )
     filterset_class = FilterForTitle
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
+    http_method_names = NO_PUT_METHODS
 
     def get_serializer_class(self):
         if self.action in ('list', 'retrieve'):
@@ -49,7 +52,10 @@ class GenreViewSet(viewsets.ModelViewSet):
     search_fields = ('name',)
 
 
-class CategoryViewSet(viewsets.ModelViewSet):
+class CategoryViewSet(mixins.CreateModelMixin,
+                      mixins.ListModelMixin,
+                      mixins.DestroyModelMixin,
+                      viewsets.GenericViewSet):
     """Отображение действий с категориями произведений."""
     queryset = Category.objects.all()
     permission_classes = (IsAdminOrReadOnly,)
@@ -64,6 +70,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     serializer_class = ReviewSerializer
     permission_classes = (IsAuthorModeratorAdminOrReadOnlyPermission, )
+    http_method_names = NO_PUT_METHODS
+
 
     def get_title(self):
         return get_object_or_404(Title, pk=self.kwargs['title_id'])
@@ -79,8 +87,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     """Отображение действий с комментариями."""
+
     serializer_class = CommentSerializer
     permission_classes = (IsAuthorOrModeratorOrAdminOrReadOnly, )
+    # http_method_names = ['get', 'post', 'patch']
+    http_method_names = NO_PUT_METHODS
+
 
     def get_queryset(self):
         review = get_object_or_404(
@@ -96,6 +108,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
 class UserViewSet(viewsets.ModelViewSet):
     """Работа с профилем пользователя."""
+
     queryset = User.objects.all()
     serializer_class = UserSerializer
     lookup_field = 'username'
