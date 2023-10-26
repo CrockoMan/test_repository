@@ -1,6 +1,9 @@
-from rest_framework import viewsets
+from rest_framework import viewsets, mixins, status
 from django.db.models import Avg
-from reviews.models import Title, Category, Genre, Review
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
+from reviews.models import Title, Category, Genre, Review, User
 from rest_framework import viewsets, filters
 from rest_framework.pagination import LimitOffsetPagination
 from django.shortcuts import get_object_or_404
@@ -10,7 +13,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .filters import FilterForTitle
 from .serializers import (CategorySerializer, GenreSerializer,
                           TitleReadSerializer, TitleWriteSerializer,
-                          ReviewSerializer, CommentSerializer)
+                          ReviewSerializer, CommentSerializer, UserSerializer,
+                          )
 
 
 class TitleViewSet(viewsets.ModelViewSet):
@@ -74,15 +78,35 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     pagination_class = LimitOffsetPagination
 
-    def ger_review(self):
+    def get_review(self):
         return get_object_or_404(Review, pk=self.kwargs['review_id'])
 
     def get_queryset(self):
-        # title = get_object_or_404(Title, pk=self.kwargs['title_id'])
-        review = self.ger_review()
+        review = self.get_review()
         return review.comments.all()
 
     def perform_create(self, serializer):
-        # title = get_object_or_404(Title, pk=self.kwargs['title_id'])
-        review = self.ger_review()
+        review = self.get_review()
         serializer.save(author=self.request.user, review=review)
+
+
+class UserViewSet(viewsets.ModelViewSet):
+    """Работа с профилем пользователя."""
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    lookup_field = 'username'
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ('username',)
+
+    @action(methods=['get', 'patch'], url_path='me', detail=False)
+    def me_path_user(self, request):
+        user = User.objects.get(username=request.user)
+        if request.method == 'GET':
+            serializer = self.get_serializer(user)
+            return Response(serializer.data)
+
+        serializer = UserSerializer(user, ata=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
