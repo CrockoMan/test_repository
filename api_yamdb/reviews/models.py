@@ -17,9 +17,27 @@ SCORE_CHOICES = (
     (10, '10 - Великолепно')
 )
 
+USER_CHOICES = (
+    ('user', 'Пользователь'),
+    ('moderator', 'Модератор'),
+    ('admin', 'Администратор'),
+)
+
 
 class User(AbstractUser):
-    pass
+    email = models.EmailField('Почта', unique=True)
+    bio = models.TextField('Инфо', blank=True)
+    role = models.CharField('Роль',
+                            max_length=16,
+                            choices=USER_CHOICES,
+                            default='user')
+    confirmation_code = models.CharField('Код подтверждения',
+                                         max_length=150,
+                                         default='NewCode')
+
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
 
 
 class Category(CategoryAndGenre):
