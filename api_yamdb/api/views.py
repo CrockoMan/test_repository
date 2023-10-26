@@ -100,12 +100,11 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(methods=['get', 'patch'], url_path='me', detail=False)
     def me_path_user(self, request):
+        user = User.objects.get(username=request.user)
         if request.method == 'GET':
-            user = User.objects.get(username=request.user)
             serializer = self.get_serializer(user)
             return Response(serializer.data)
 
-        user = User.objects.get(username=request.user)
         serializer = UserSerializer(user, ata=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
