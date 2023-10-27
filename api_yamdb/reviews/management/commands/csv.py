@@ -6,31 +6,11 @@ from django.shortcuts import get_object_or_404
 
 from reviews.models import (User, Category, Genre, Title,
                             Review, Comment)
-                            # TitleGenre, Review, Comment)
 
 
 class Command(BaseCommand):
     def handle(self, **options):
-        title_genre = {'0': 0}
-        Title_Genre = apps.get_model('reviews', 'title_genre')
-        Title_Genre.objects.all().delete()
-        with open(r'static\data\genre_title.csv', encoding='utf-8') as file:
-            reader = csv.reader(file)
-            next(reader)
-            for row in reader:
-                print(row)
-                try:
-                    Title_Genre.objects.get_or_create(id=row[0],
-                                                      title_id=row[1],
-                                                      genre_id=row[2])
-                except Exception as ex:
-                    print(f'Ошибка загрузки {ex}')
-            #     title_genre[row[1]] = row[2]
-            #     if title_genre['0'] < int(row[2])+1:
-            #         title_genre['0'] = int(row[2])+1
-            #         print(title_genre['0'])
-            # print(title_genre)
-
+        ErrorsCount = 0
         User.objects.all().delete()
         print('Загрузка пользователей')
         with open(r'static\data\users.csv', encoding='utf-8') as file:
@@ -44,8 +24,9 @@ class Command(BaseCommand):
                         username=row[1],
                         email=row[2],
                         role=row[3])
-                except Exception as ex:
-                    print(f'Ошибка загрузки {ex}')
+                except Exception as err:
+                    print(f'Ошибка загрузки {err}')
+                    ErrorsCount = ErrorsCount + 1
 
         Category.objects.all().delete()
         print('Загрузка категорий')
@@ -60,8 +41,10 @@ class Command(BaseCommand):
                         name=row[1],
                         slug=row[2],
                     )
-                except Exception as ex:
-                    print(f'Ошибка загрузки {ex}')
+                except Exception as err:
+                    print(f'Ошибка загрузки {err}')
+                    ErrorsCount = ErrorsCount + 1
+
 
         Genre.objects.all().delete()
         print('Загрузка жанров')
@@ -76,8 +59,10 @@ class Command(BaseCommand):
                         name=row[1],
                         slug=row[2],
                     )
-                except Exception as ex:
-                    print(f'Ошибка загрузки {ex}')
+                except Exception as err:
+                    print(f'Ошибка загрузки {err}')
+                    ErrorsCount = ErrorsCount + 1
+
 
         Title.objects.all().delete()
         print('Загрузка наименований')
@@ -95,15 +80,16 @@ class Command(BaseCommand):
                         name=row[1],
                         year=row[2],
                         category=category)
-                except Exception as ex:
-                    print(f'Ошибка загрузки {ex}')
+                except Exception as err:
+                    print(f'Ошибка загрузки {err}')
                     print(f'Category={category}')
+                    ErrorsCount = ErrorsCount + 1
                     # print(f'Genre={genre}')
                     # exit()
 
         Title_Genre = apps.get_model('reviews', 'title_genre')
         Title_Genre.objects.all().delete()
-        print('Загрузка Title_Genre')
+        print('Загрузка связей')
         with open(r'static\data\genre_title.csv', encoding='utf-8') as file:
             reader = csv.reader(file)
             next(reader)
@@ -113,8 +99,10 @@ class Command(BaseCommand):
                     Title_Genre.objects.get_or_create(id=row[0],
                                                       title_id=row[1],
                                                       genre_id=row[2])
-                except Exception as ex:
-                    print(f'Ошибка загрузки {ex}')
+                except Exception as err:
+                    print(f'Ошибка загрузки {err}')
+                    ErrorsCount = ErrorsCount + 1
+
         # TitleGenre.objects.all().delete()
         # with open(r'static\data\genre_title.csv', encoding='utf-8') as file:
         #     reader = csv.reader(file)
@@ -125,13 +113,14 @@ class Command(BaseCommand):
         #             title=get_object_or_404(Title, pk=row[1]),
         #             genre=get_object_or_404(Genre, pk=row[2]),
         #         )
+
         Review.objects.all().delete()
         print('Загрузка отзывов')
         with open(r'static\data\review.csv', encoding='utf-8') as file:
             reader = csv.reader(file)
             next(reader)
             for row in reader:
-                print(row)
+                print(f'\n{row}')
                 try:
                     Review.objects.get_or_create(
                         id=row[0],
@@ -143,6 +132,8 @@ class Command(BaseCommand):
                     )
                 except Exception as err:
                     print(f'Ошибка {err}')
+                    ErrorsCount = ErrorsCount + 1
+
 
         Comment.objects.all().delete()
         print('Загрузка комментариев')
@@ -161,3 +152,8 @@ class Command(BaseCommand):
                     )
                 except Exception as err:
                     print(f'Ошибка {err}')
+                    ErrorsCount = ErrorsCount + 1
+        if ErrorsCount:
+            print(f'Ошибок загруки :{ErrorsCount}')
+        else:
+            print(f'Загрузка завершена, ошибок нет')
