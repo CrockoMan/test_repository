@@ -14,7 +14,8 @@ from .filters import FilterForTitle
 from .permissions import (IsAdminOrReadOnly,
                           IsAuthorOrModeratorOrAdminOrReadOnly,
                           IsAdminOnlyPermission,
-                          IsAuthorModeratorAdminOrReadOnlyPermission)
+                          IsAuthorModeratorAdminOrReadOnlyPermission,
+                          OnlySelfUserPermission)
 from .serializers import (CategorySerializer, GenreSerializer,
                           TitleReadSerializer, TitleWriteSerializer,
                           ReviewSerializer, CommentSerializer, UserSerializer,
@@ -115,15 +116,19 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
     permission_classes = (IsAdminOnlyPermission,)
+    http_method_names = NO_PUT_METHODS
 
-    @action(methods=['get', 'patch'], url_path='me', detail=False)
+    @action(methods=['get', 'patch'], url_path='me', detail=False,
+            permission_classes=(OnlySelfUserPermission,))
     def me_path_user(self, request):
         user = User.objects.get(username=request.user)
         if request.method == 'GET':
             serializer = self.get_serializer(user)
             return Response(serializer.data)
 
-        serializer = UserMePathSerializer(user, ata=request.data, partial=True)
+        serializer = UserMePathSerializer(user,
+                                          data=request.data,
+                                          partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=200)
