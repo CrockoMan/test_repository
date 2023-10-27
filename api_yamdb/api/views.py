@@ -42,7 +42,10 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitleWriteSerializer
 
 
-class GenreViewSet(viewsets.ModelViewSet):
+class GenreViewSet(mixins.CreateModelMixin,
+                   mixins.ListModelMixin,
+                   mixins.DestroyModelMixin,
+                   viewsets.GenericViewSet):
     """Отображение действий с жанрами для произведений."""
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer

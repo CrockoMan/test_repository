@@ -50,6 +50,7 @@ class CategoryAndGenre(models.Model):
 
 class User(AbstractUser):
     """Пользователи."""
+
     email = models.EmailField('Почта', unique=True)
     bio = models.TextField('Инфо', blank=True)
     role = models.CharField('Роль',
@@ -59,6 +60,9 @@ class User(AbstractUser):
     confirmation_code = models.CharField('Код подтверждения',
                                          max_length=150,
                                          default='NewCode')
+    USER = 'user'
+    MODERATOR = 'moderator'
+    ADMIN = 'admin'
 
     class Meta:
         verbose_name = 'Пользователь'
@@ -66,11 +70,11 @@ class User(AbstractUser):
 
     @property
     def is_admin(self):
-        return self.is_staff or self.role == settings.ADMIN
+        return self.is_staff or self.role == self.ADMIN
 
     @property
     def is_moderator(self):
-        return self.role == settings.MODERATOR
+        return self.role == self.MODERATOR
 
 
 class Category(CategoryAndGenre):
