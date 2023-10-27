@@ -3,7 +3,7 @@ import csv
 from django.core.management.base import BaseCommand
 from django.shortcuts import get_object_or_404
 
-from ...models import (User, Category, Genre,
+from reviews.models import (User, Category, Genre,
                        Title, TitleGenre, Review, Comment)
 
 

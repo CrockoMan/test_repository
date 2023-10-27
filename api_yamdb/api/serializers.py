@@ -8,7 +8,7 @@ from reviews.models import (Review, Comment, Title,
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    """Отзывы."""
+    """Работа с отзывами."""
     author = serializers.SlugRelatedField(read_only=True,
                                           slug_field='username')
 
@@ -19,17 +19,18 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     def validate(self, value):
         request = self.context.get('request')
-        author = request.user
+        user = request.user
 
-        if Review.objects.filter(
-                author=author,
-                title=self.context['view'].kwargs['title_id']).exists():
-            raise serializers.ValidationError('Not applied many review')
+        if Review.objects.filter(author=user,
+                                 title=self.context['view'].kwargs['title_id']
+                                 ).exists():
+            if self.context['request'].method in ['POST']:
+                raise serializers.ValidationError('Not applied many review')
         return value
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    """Cериализатор работы с комментариями."""
+    """Работа с комментариями."""
     author = serializers.SlugRelatedField(read_only=True,
                                           slug_field='username')
 
@@ -40,7 +41,7 @@ class CommentSerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
-    """Сериализатор работы с жанрами."""
+    """Работа с жанрами."""
     class Meta:
         model = Genre
         fields = ('name', 'slug')
@@ -48,7 +49,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    """Сериализатор работы с категориями."""
+    """Работа с категориями."""
     class Meta:
         model = Category
         fields = ('name', 'slug')
@@ -56,7 +57,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
-    """Сериализатор получения информации о произведениях."""
+    """Получение информации о произведениях."""
 
     rating = serializers.SerializerMethodField()
     category = CategorySerializer(read_only=True)
@@ -77,7 +78,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
 
 
 class TitleWriteSerializer(serializers.ModelSerializer):
-    """Сериализатор добавления и изменения инфо о произведениях."""
+    """Добавление и изменение информации о произведениях."""
 
     genre = serializers.SlugRelatedField(slug_field='slug',
                                          many=True,
@@ -100,7 +101,7 @@ class TitleWriteSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """Сериализатор работы с пользователями"""
+    """Работа с пользователями"""
 
     class Meta:
         model = User
@@ -113,7 +114,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserMePathSerializer(serializers.ModelSerializer):
-    """Сериализатор работы с текущим пользователем"""
+    """Работа с текущим пользователем"""
 
     class Meta:
         model = User

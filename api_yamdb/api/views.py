@@ -1,19 +1,17 @@
-from rest_framework import viewsets, mixins
+from rest_framework import mixins
 from django.db.models import Avg
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from reviews.models import Title, Category, Genre, Review, User
-from rest_framework import viewsets, filters
-from rest_framework.pagination import LimitOffsetPagination
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, filters
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .filters import FilterForTitle
 from .permissions import (IsAdminOrReadOnly,
-                          IsAuthorOrModeratorOrAdminOrReadOnly,
                           IsAdminOnlyPermission,
+                          IsAuthorModeratorAdminOrReadOnly,
                           IsAuthorModeratorAdminOrReadOnlyPermission,
                           OnlySelfUserPermission)
 from .serializers import (CategorySerializer, GenreSerializer,
@@ -23,6 +21,7 @@ from .serializers import (CategorySerializer, GenreSerializer,
 
 NO_PUT_METHODS = ('get', 'post', 'patch', 'delete', 'head','options', 'trace')
 
+
 class TitleViewSet(viewsets.ModelViewSet):
     """Отображение действий с произведениями."""
 
@@ -30,7 +29,6 @@ class TitleViewSet(viewsets.ModelViewSet):
         rating=Avg('reviews__score')
     )
     permission_classes = (IsAdminOrReadOnly,)
-    filter_backends = (DjangoFilterBackend,)
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter, )
     filterset_class = FilterForTitle
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
@@ -76,7 +74,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthorModeratorAdminOrReadOnlyPermission, )
     http_method_names = NO_PUT_METHODS
 
-
     def get_title(self):
         return get_object_or_404(Title, pk=self.kwargs['title_id'])
 
@@ -86,14 +83,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         title = self.get_title()
-        serializer.save(author=self.request.user, title=title)
+        serializer.save(author=self.request.user,
+                        title=self.get_title())
 
 
 class CommentViewSet(viewsets.ModelViewSet):
     """Отображение действий с комментариями."""
 
     serializer_class = CommentSerializer
-    permission_classes = (IsAuthorOrModeratorOrAdminOrReadOnly, )
+    permission_classes = (IsAuthorModeratorAdminOrReadOnly, )
     # http_method_names = ['get', 'post', 'patch']
     http_method_names = NO_PUT_METHODS
 
