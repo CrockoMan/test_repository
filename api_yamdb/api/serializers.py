@@ -9,18 +9,13 @@ from reviews.models import (Review, Comment, Title,
 
 class ReviewSerializer(serializers.ModelSerializer):
     """Отзывы."""
-    author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
-    )
+    author = serializers.SlugRelatedField(read_only=True,
+                                          slug_field='username')
 
     class Meta:
         fields = '__all__'
         model = Review
         read_only_fields = ('author', 'title')
-        # validators = [
-        #     UniqueTogetherValidator(queryset=Review.objects.all(),
-        #                             fields=('author', 'title'))
-        # ]
 
     def validate(self, value):
         request = self.context.get('request')
@@ -34,19 +29,18 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    """Cериализатор для работы с комментарии."""
-    author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
-    )
+    """Cериализатор работы с комментариями."""
+    author = serializers.SlugRelatedField(read_only=True,
+                                          slug_field='username')
 
     class Meta:
         fields = '__all__'
-        model = Comments
+        model = Comment
         read_only_fields = ('author', 'review')
 
 
 class GenreSerializer(serializers.ModelSerializer):
-    """Сериализатор для работы с жанрами."""
+    """Сериализатор работы с жанрами."""
     class Meta:
         model = Genre
         fields = ('name', 'slug')
@@ -54,7 +48,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    """Сериализатор для работы с категориями."""
+    """Сериализатор работы с категориями."""
     class Meta:
         model = Category
         fields = ('name', 'slug')
@@ -62,7 +56,7 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
-    """Сериализатор для получения информации о произведениях."""
+    """Сериализатор получения информации о произведениях."""
 
     rating = serializers.SerializerMethodField()
     category = CategorySerializer(read_only=True)
@@ -79,21 +73,17 @@ class TitleReadSerializer(serializers.ModelSerializer):
             average_score = reviews.aggregate(Avg('score'))['score__avg']
             if average_score is not None:
                 return round(average_score, 1)
-        return 0
+        return None
 
 
 class TitleWriteSerializer(serializers.ModelSerializer):
-    """Сериализатор для добавления и изменения инфо о произведениях."""
+    """Сериализатор добавления и изменения инфо о произведениях."""
 
-    genre = serializers.SlugRelatedField(
-        slug_field='slug',
-        many=True,
-        queryset=Genre.objects.all(),
-    )
-    category = serializers.SlugRelatedField(
-        slug_field='slug',
-        queryset=Category.objects.all(),
-    )
+    genre = serializers.SlugRelatedField(slug_field='slug',
+                                         many=True,
+                                         queryset=Genre.objects.all())
+    category = serializers.SlugRelatedField(slug_field='slug',
+                                            queryset=Category.objects.all())
     rating = serializers.IntegerField(required=False)
 
     class Meta:
@@ -110,6 +100,7 @@ class TitleWriteSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """Сериализатор работы с пользователями"""
 
     class Meta:
         model = User
@@ -120,3 +111,16 @@ class UserSerializer(serializers.ModelSerializer):
                   'bio',
                   'role')
 
+
+class UserMePathSerializer(serializers.ModelSerializer):
+    """Сериализатор работы с текущим пользователем"""
+
+    class Meta:
+        model = User
+        fields = ('username',
+                  'email',
+                  'first_name',
+                  'last_name',
+                  'bio',
+                  'role')
+        read_only_fields = ('role',)
