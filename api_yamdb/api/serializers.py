@@ -1,5 +1,6 @@
 from datetime import datetime as dt
 
+from django.db.models import Avg
 from rest_framework import serializers
 
 from reviews.models import (Review, Comment, Title,
@@ -7,19 +8,40 @@ from reviews.models import (Review, Comment, Title,
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    """Отзывы."""
-    author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
-    )
+    """Работа с отзывами."""
+    author = serializers.SlugRelatedField(read_only=True,
+                                          slug_field='username')
 
     class Meta:
         fields = '__all__'
         model = Review
         read_only_fields = ('author', 'title')
 
+    def validate(self, value):
+        request = self.context.get('request')
+        user = request.user
+
+        if Review.objects.filter(author=user,
+                                 title=self.context['view'].kwargs['title_id']
+                                 ).exists():
+            if self.context['request'].method in ['POST']:
+                raise serializers.ValidationError('Not applied many review')
+        return value
+
+
+class CommentSerializer(serializers.ModelSerializer):
+    """Работа с комментариями."""
+    author = serializers.SlugRelatedField(read_only=True,
+                                          slug_field='username')
+
+    class Meta:
+        fields = '__all__'
+        model = Comment
+        read_only_fields = ('author', 'review')
+
 
 class GenreSerializer(serializers.ModelSerializer):
-    """Сериализатор для работы с жанрами."""
+    """Работа с жанрами."""
     class Meta:
         model = Genre
         fields = ('name', 'slug')
@@ -27,7 +49,7 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    """Сериализатор для работы с категориями."""
+    """Работа с категориями."""
     class Meta:
         model = Category
         fields = ('name', 'slug')
@@ -35,9 +57,9 @@ class CategorySerializer(serializers.ModelSerializer):
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
-    """Сериализатор для получения информации о произведениях."""
+    """Получение информации о произведениях."""
 
-    rating = serializers.IntegerField(read_only=True)
+    rating = serializers.SerializerMethodField()
     category = CategorySerializer(read_only=True)
     genre = GenreSerializer(many=True, read_only=True)
 
@@ -46,19 +68,23 @@ class TitleReadSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'year', 'rating',
                   'description', 'genre', 'category')
 
+    def get_rating(self, obj):
+        reviews = obj.reviews.all()
+        if reviews.exists():
+            average_score = reviews.aggregate(Avg('score'))['score__avg']
+            if average_score is not None:
+                return round(average_score, 1)
+        return None
+
 
 class TitleWriteSerializer(serializers.ModelSerializer):
-    """Сериализатор для добавления и изменения инфо о произведениях."""
+    """Добавление и изменение информации о произведениях."""
 
-    genre = serializers.SlugRelatedField(
-        slug_field='slug',
-        many=True,
-        queryset=Genre.objects.all(),
-    )
-    category = serializers.SlugRelatedField(
-        slug_field='slug',
-        queryset=Category.objects.all(),
-    )
+    genre = serializers.SlugRelatedField(slug_field='slug',
+                                         many=True,
+                                         queryset=Genre.objects.all())
+    category = serializers.SlugRelatedField(slug_field='slug',
+                                            queryset=Category.objects.all())
     rating = serializers.IntegerField(required=False)
 
     class Meta:
@@ -72,3 +98,30 @@ class TitleWriteSerializer(serializers.ModelSerializer):
                 f'Год {data} больше текущего!',
             )
         return data
+
+
+class UserSerializer(serializers.ModelSerializer):
+    """Работа с пользователями"""
+
+    class Meta:
+        model = User
+        fields = ('username',
+                  'email',
+                  'first_name',
+                  'last_name',
+                  'bio',
+                  'role')
+
+
+class UserMePathSerializer(serializers.ModelSerializer):
+    """Работа с текущим пользователем"""
+
+    class Meta:
+        model = User
+        fields = ('username',
+                  'email',
+                  'first_name',
+                  'last_name',
+                  'bio',
+                  'role')
+        read_only_fields = ('role',)
