@@ -86,7 +86,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         title = self.get_title()
-        serializer.save(author=self.request.user, title=title)
+        serializer.save(author=self.request.user, title_id=self.kwargs.get('title_id'))
 
 
 class CommentViewSet(viewsets.ModelViewSet):

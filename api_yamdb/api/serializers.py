@@ -2,6 +2,7 @@ from datetime import datetime as dt
 
 from django.db.models import Avg
 from rest_framework import serializers
+from rest_framework.generics import get_object_or_404
 
 from reviews.models import (Review, Comment, Title,
                             Category, Genre, User)
@@ -13,18 +14,20 @@ class ReviewSerializer(serializers.ModelSerializer):
                                           slug_field='username')
 
     class Meta:
-        fields = '__all__'
+        # fields = '__all__'
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
         model = Review
         read_only_fields = ('author', 'title')
 
     def validate(self, value):
         request = self.context.get('request')
-        author = request.user
+        user = request.user
 
-        if Review.objects.filter(
-                author=author,
-                title=self.context['view'].kwargs['title_id']).exists():
-            raise serializers.ValidationError('Not applied many review')
+        if Review.objects.filter(author=user,
+                                 title=self.context['view'].kwargs['title_id']
+                                 ).exists():
+            if self.context['request'].method in ['POST']:
+                raise serializers.ValidationError('Not applied many review')
         return value
 
 
