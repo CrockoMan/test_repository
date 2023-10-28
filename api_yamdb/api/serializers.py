@@ -46,7 +46,7 @@ class GenreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Genre
         fields = ('name', 'slug')
-        lookup_field = 'slug'
+        # lookup_field = 'slug'
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -54,7 +54,7 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ('name', 'slug')
-        lookup_field = 'slug'
+        # lookup_field = 'slug'
 
 
 class TitleReadSerializer(serializers.ModelSerializer):
@@ -113,6 +113,11 @@ class UserSerializer(serializers.ModelSerializer):
                   'bio',
                   'role')
 
+    def validate_username(self, value):
+        if value == 'me':
+            raise serializers.ValidationError('Имя me запрещено')
+        return value
+
 
 class UserMePathSerializer(serializers.ModelSerializer):
     """Работа с текущим пользователем"""
@@ -126,6 +131,11 @@ class UserMePathSerializer(serializers.ModelSerializer):
                   'bio',
                   'role')
         read_only_fields = ('role',)
+
+    def validate_username(self, value):
+        if value == 'me':
+            raise serializers.ValidationError('Имя me запрещено')
+        return value
 
 
 class SignupSerializer(serializers.ModelSerializer):

@@ -67,6 +67,7 @@ class User(AbstractUser):
     class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
+        ordering = ('username', )
 
     @property
     def is_admin(self):
@@ -146,5 +147,11 @@ class Comment(models.Model):
                                     auto_now_add=True,
                                     db_index=True)
 
+    class Meta:
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
+        ordering = ('-pub_date',)
+
     def __str__(self):
         return self.text
+

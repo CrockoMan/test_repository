@@ -5,6 +5,7 @@ from django.core.mail import send_mail
 from rest_framework import mixins, permissions
 from django.db.models import Avg
 from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -37,6 +38,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter, )
     filterset_class = FilterForTitle
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
+    pagination_class = LimitOffsetPagination
     http_method_names = NO_PUT_METHODS
 
     def get_serializer_class(self):
@@ -57,6 +59,7 @@ class GenreViewSet(mixins.CreateModelMixin,
     filter_backends = (filters.SearchFilter,)
     lookup_field = 'slug'
     search_fields = ('name',)
+    pagination_class = LimitOffsetPagination
 
 
 class CategoryViewSet(mixins.CreateModelMixin,
@@ -70,6 +73,7 @@ class CategoryViewSet(mixins.CreateModelMixin,
     filter_backends = (filters.SearchFilter,)
     search_fields = ('name',)
     lookup_field = 'slug'
+    pagination_class = LimitOffsetPagination
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -78,6 +82,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = (IsAuthorModeratorAdminOrReadOnlyPermission, )
     http_method_names = NO_PUT_METHODS
+    pagination_class = LimitOffsetPagination
 
     def get_title(self):
         return get_object_or_404(Title, pk=self.kwargs['title_id'])
@@ -99,6 +104,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthorModeratorAdminOrReadOnly, )
     # http_method_names = ['get', 'post', 'patch']
     http_method_names = NO_PUT_METHODS
+    pagination_class = LimitOffsetPagination
 
     def get_queryset(self):
         review = get_object_or_404(Review,
@@ -156,7 +162,6 @@ class SignupViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             )
             username = request.data.get('username')
             user = User.objects.get(username=username)
-            # code = user.confirmation_code
             send_mail('Код подтверждения',
                       f'Ваш код подтверждения: {user.confirmation_code}',
                       'noreply@example.com',
