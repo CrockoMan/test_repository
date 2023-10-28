@@ -14,7 +14,7 @@ class ReviewSerializer(serializers.ModelSerializer):
                                           slug_field='username')
 
     class Meta:
-        fields = '__all__'
+        fields = ('id', 'text', 'author', 'score', 'pub_date')
         model = Review
         read_only_fields = ('author', 'title')
 
@@ -36,7 +36,8 @@ class CommentSerializer(serializers.ModelSerializer):
                                           slug_field='username')
 
     class Meta:
-        fields = '__all__'
+        # fields = '__all__'
+        fields = ('id', 'text', 'author', 'pub_date')
         model = Comment
         read_only_fields = ('author', 'review')
 
@@ -68,6 +69,8 @@ class TitleReadSerializer(serializers.ModelSerializer):
         model = Title
         fields = ('id', 'name', 'year', 'rating',
                   'description', 'genre', 'category')
+        read_only_fields = ('id', 'name', 'year', 'rating',
+                            'description', 'genre', 'category')
 
     def get_rating(self, obj):
         reviews = obj.reviews.all()
@@ -95,10 +98,11 @@ class TitleWriteSerializer(serializers.ModelSerializer):
 
     def validate_year(self, data):
         if data >= dt.now().year:
-            raise serializers.ValidationError(
-                f'Год {data} больше текущего!',
-            )
+            raise serializers.ValidationError(f'Wrond data {data}')
         return data
+
+    def to_representation(self, value):
+        return TitleReadSerializer(value).data
 
 
 class UserSerializer(serializers.ModelSerializer):

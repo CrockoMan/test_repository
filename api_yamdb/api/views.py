@@ -117,6 +117,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, review=review)
 
 
+
 class UserViewSet(viewsets.ModelViewSet):
     """Работа с профилем пользователя."""
 
@@ -166,8 +167,7 @@ class SignupViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
                       f'Ваш код подтверждения: {user.confirmation_code}',
                       'noreply@example.com',
                       [user.email],
-                      fail_silently=False,
-            )
+                      fail_silently=False)
             return Response(serializer.data, status=200)
         return Response(serializer.errors, status=400)
 
