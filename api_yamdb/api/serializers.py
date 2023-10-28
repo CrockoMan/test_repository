@@ -1,3 +1,4 @@
+import random
 from datetime import datetime as dt
 
 from django.db.models import Avg
@@ -125,3 +126,52 @@ class UserMePathSerializer(serializers.ModelSerializer):
                   'bio',
                   'role')
         read_only_fields = ('role',)
+
+
+class SignupSerializer(serializers.ModelSerializer):
+    """Регистрация или обновление пользователя"""
+    # email = serializers.EmailField(required=True)
+    # username = serializers.CharField(required=True)
+
+    class Meta:
+        model = User
+        fields = ('email', 'username')
+
+    def validate_username(self, value):
+        if value == 'me':
+            raise serializers.ValidationError('Имя me запрещено')
+        return value
+
+    # def generate_confirmation_code(self):
+    #     code_chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    #     code_length = 20
+    #     code = ''
+    #     for i in range(0, code_length):
+    #         slice_start = random.randint(0, len(code_chars) - 1)
+    #         code += code_chars[slice_start: slice_start + 1]
+    #     return code
+
+    # def create(self, validated_data):
+    #     user = User.objects.create_user(**validated_data)
+    #     user.confirmation_code = self.generate_confirmation_code()
+    #     user.save()
+    #     return user
+    #
+    # def update(self, instance, validated_data):
+    #     return instance, validated_data
+
+
+class TokenUserSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    confirmation_code = serializers.CharField()
+
+    # def validate(self, data):
+    #     user = User.objects.filter(username=data['username']).first()
+    #     if not user:
+    #         raise serializers.ValidationError('User not found', code=404)
+    #
+    #     if not user.confirmation_code == data['confirmation_code']:
+    #         raise serializers.ValidationError('Invalid confirmation code')
+    #
+    #     data['user'] = user
+    #     return data

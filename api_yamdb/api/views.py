@@ -1,7 +1,13 @@
-from rest_framework import mixins
+import random
+
+from django.contrib.auth import authenticate, login
+from django.core.mail import send_mail
+from rest_framework import mixins, permissions
 from django.db.models import Avg
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from reviews.models import Title, Category, Genre, Review, User
 from django.shortcuts import get_object_or_404
@@ -17,17 +23,16 @@ from .permissions import (IsAdminOrReadOnly,
 from .serializers import (CategorySerializer, GenreSerializer,
                           TitleReadSerializer, TitleWriteSerializer,
                           ReviewSerializer, CommentSerializer, UserSerializer,
-                          UserMePathSerializer)
+                          UserMePathSerializer, SignupSerializer,
+                          TokenUserSerializer)
 
-NO_PUT_METHODS = ('get', 'post', 'patch', 'delete', 'head','options', 'trace')
+NO_PUT_METHODS = ('get', 'post', 'patch', 'delete', 'head', 'options', 'trace')
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     """Отображение действий с произведениями."""
 
-    queryset = Title.objects.annotate(
-        rating=Avg('reviews__score')
-    )
+    queryset = Title.objects.annotate(rating=Avg('reviews__score'))
     permission_classes = (IsAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend, filters.OrderingFilter, )
     filterset_class = FilterForTitle
@@ -95,12 +100,10 @@ class CommentViewSet(viewsets.ModelViewSet):
     # http_method_names = ['get', 'post', 'patch']
     http_method_names = NO_PUT_METHODS
 
-
     def get_queryset(self):
-        review = get_object_or_404(
-            Review,
-            title=self.kwargs['title_id'],
-            pk=self.kwargs['review_id'])
+        review = get_object_or_404(Review,
+                                   title=self.kwargs['title_id'],
+                                   pk=self.kwargs['review_id'])
         return review.comments.all()
 
     def perform_create(self, serializer):
@@ -134,3 +137,49 @@ class UserViewSet(viewsets.ModelViewSet):
             serializer.save()
             return Response(serializer.data, status=200)
         return Response(serializer.errors, status=400)
+
+
+class SignupViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    serializer_class = SignupSerializer
+    queryset = User.objects.all()
+    permission_classes = (permissions.AllowAny,)
+
+    def create(self, request):
+        serializer = SignupSerializer(data=request.data)
+        if (User.objects.filter(username=request.data.get('username'),
+                                email=request.data.get('email'))):
+            user = User.objects.get(username=request.data.get('username'))
+            serializer = SignupSerializer(user, data=request.data)
+        if serializer.is_valid():
+            serializer.save(
+                confirmation_code=User.objects.make_random_password(length=20)
+            )
+            username = request.data.get('username')
+            user = User.objects.get(username=username)
+            # code = user.confirmation_code
+            send_mail('Код подтверждения',
+                      f'Ваш код подтверждения: {user.confirmation_code}',
+                      'noreply@example.com',
+                      [user.email],
+                      fail_silently=False,
+            )
+            return Response(serializer.data, status=200)
+        return Response(serializer.errors, status=400)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def get_token(request):
+    """Получение токена."""
+
+    serializer = TokenUserSerializer(data=request.data)
+    username = request.data.get('username')
+    confirmation_code = request.data.get('confirmation_code')
+
+    if serializer.is_valid():
+        user = get_object_or_404(User, username=username)
+        if user.confirmation_code == confirmation_code:
+            token = RefreshToken.for_user(user)
+            return Response({'token': str(token.access_token)}, status=200)
+
+    return Response('Error', status=400)

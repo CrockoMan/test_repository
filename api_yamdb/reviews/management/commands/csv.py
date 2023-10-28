@@ -19,11 +19,10 @@ class Command(BaseCommand):
             for row in reader:
                 print(row)
                 try:
-                    User.objects.get_or_create(
-                        id=row[0],
-                        username=row[1],
-                        email=row[2],
-                        role=row[3])
+                    User.objects.get_or_create(id=row[0],
+                                               username=row[1],
+                                               email=row[2],
+                                               role=row[3])
                 except Exception as err:
                     print(f'Ошибка загрузки {err}')
                     ErrorsCount = ErrorsCount + 1
@@ -36,11 +35,9 @@ class Command(BaseCommand):
             for row in reader:
                 print(row)
                 try:
-                    Category.objects.get_or_create(
-                        id=row[0],
-                        name=row[1],
-                        slug=row[2],
-                    )
+                    Category.objects.get_or_create(id=row[0],
+                                                   name=row[1],
+                                                   slug=row[2])
                 except Exception as err:
                     print(f'Ошибка загрузки {err}')
                     ErrorsCount = ErrorsCount + 1
@@ -54,11 +51,9 @@ class Command(BaseCommand):
             for row in reader:
                 print(row)
                 try:
-                    Genre.objects.get_or_create(
-                        id=row[0],
-                        name=row[1],
-                        slug=row[2],
-                    )
+                    Genre.objects.get_or_create(id=row[0],
+                                                name=row[1],
+                                                slug=row[2])
                 except Exception as err:
                     print(f'Ошибка загрузки {err}')
                     ErrorsCount = ErrorsCount + 1
@@ -75,11 +70,10 @@ class Command(BaseCommand):
                 try:
                     category = get_object_or_404(Category, pk=row[3])
                     # genre = get_object_or_404(Genre, pk=title_genre[row[0]])
-                    Title.objects.get_or_create(
-                        id=row[0],
-                        name=row[1],
-                        year=row[2],
-                        category=category)
+                    Title.objects.get_or_create(id=row[0],
+                                                name=row[1],
+                                                year=row[2],
+                                                category=category)
                 except Exception as err:
                     print(f'Ошибка загрузки {err}')
                     print(f'Category={category}')
@@ -154,6 +148,6 @@ class Command(BaseCommand):
                     print(f'Ошибка {err}')
                     ErrorsCount = ErrorsCount + 1
         if ErrorsCount:
-            print(f'Ошибок загруки :{ErrorsCount}')
+            print(f'\n Ошибок загруки :{ErrorsCount}')
         else:
-            print(f'Загрузка завершена, ошибок нет')
+            print(f'\n Загрузка завершена, ошибок нет')
