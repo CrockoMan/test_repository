@@ -106,15 +106,22 @@ class CommentViewSet(viewsets.ModelViewSet):
     http_method_names = NO_PUT_METHODS
     pagination_class = LimitOffsetPagination
 
+    def get_review(self):
+        return get_object_or_404(Review,
+                                 title=self.kwargs['title_id'],
+                                 pk=self.kwargs['review_id'])
+
     def get_queryset(self):
-        review = get_object_or_404(Review,
-                                   title=self.kwargs['title_id'],
-                                   pk=self.kwargs['review_id'])
-        return review.comments.all()
+        # review = get_object_or_404(Review,
+        #                            title=self.kwargs['title_id'],
+        #                            pk=self.kwargs['review_id'])
+        return self.get_review().comments.all()
 
     def perform_create(self, serializer):
-        review = get_object_or_404(Review, pk=self.kwargs['review_id'])
-        serializer.save(author=self.request.user, review=review)
+        # review = get_object_or_404(Review,
+        #                            title=self.kwargs['title_id'],
+        #                            pk=self.kwargs['review_id'])
+        serializer.save(author=self.request.user, review=self.get_review())
 
 
 
