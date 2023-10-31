@@ -1,18 +1,6 @@
 from rest_framework import permissions
 
 
-class IsAuthorModeratorAdminOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
-    """Права для работы с отзывами и комментариями."""
-
-    def has_object_permission(self, request, view, obj):
-        return (
-            request.method in permissions.SAFE_METHODS
-            or obj.author == request.user
-            or request.user.is_moderator
-            or request.user.is_admin
-        )
-
-
 class IsAdminOrReadOnly(permissions.BasePermission):
     """Права для работы с категориями и жанрами."""
 
@@ -33,24 +21,14 @@ class IsAuthorModeratorAdminOrReadOnlyPermission(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         return (request.method in permissions.SAFE_METHODS
-                or obj.author == request.user or request.user.is_moderator
-                or request.user.is_admin or request.user.is_superuser)
+                or obj.author == request.user
+                or request.user.is_moderator
+                or request.user.is_admin)
 
 
 class IsAdminOnlyPermission(permissions.BasePermission):
     """Только aдмин."""
 
     def has_permission(self, request, view):
-        if request.user.is_authenticated:
-            return (request.user.is_admin or request.user.is_superuser)
-        return False
-
-
-class OnlySelfUserPermission(permissions.BasePermission):
-    """Разрешение доступа к me только самому себе"""
-
-    def has_permission(self, request, view):
-        return (request.user.is_authenticated)
-
-    def has_object_permission(self, request, view, obj):
-        return (obj.id == request.user)
+        return (request.user.is_authenticated
+                and (request.user.is_admin or request.user.is_superuser))
